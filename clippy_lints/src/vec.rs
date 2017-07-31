@@ -1,6 +1,7 @@
 use rustc::hir::*;
 use rustc::lint::*;
 use rustc::ty::{self, Ty};
+use rustc::ty::subst::Substs;
 use rustc_const_eval::ConstContext;
 use syntax::codemap::Span;
 use utils::{higher, is_copy, snippet, span_lint_and_sugg};
@@ -59,7 +60,7 @@ impl<'a, 'tcx> LateLintPass<'a, 'tcx> for Pass {
 fn check_vec_macro(cx: &LateContext, vec_args: &higher::VecArgs, span: Span) {
     let snippet = match *vec_args {
         higher::VecArgs::Repeat(elem, len) => {
-            if ConstContext::with_tables(cx.tcx, cx.tables).eval(len).is_ok() {
+            if ConstContext::new(cx.tcx, cx.param_env.and(Substs::empty()), cx.tables).eval(len).is_ok() {
                 format!("&[{}; {}]", snippet(cx, elem.span, "elem"), snippet(cx, len.span, "len")).into()
             } else {
                 return;

@@ -2,6 +2,7 @@ use rustc::hir::*;
 use rustc::lint::*;
 use rustc::middle::const_val::ConstVal;
 use rustc::ty::{self, Ty};
+use rustc::ty::subst::Substs;
 use rustc_const_eval::ConstContext;
 use rustc_const_math::ConstInt;
 use std::cmp::Ordering;
@@ -391,7 +392,7 @@ fn check_match_ref_pats(cx: &LateContext, ex: &Expr, arms: &[Arm], source: Match
 
 /// Get all arms that are unbounded `PatRange`s.
 fn all_ranges<'a, 'tcx>(cx: &LateContext<'a, 'tcx>, arms: &[Arm]) -> Vec<SpannedRange<ConstVal<'tcx>>> {
-    let constcx = ConstContext::with_tables(cx.tcx, cx.tables);
+    let constcx = ConstContext::new(cx.tcx, cx.param_env.and(Substs::empty()), cx.tables);
     arms.iter()
         .flat_map(|arm| {
             if let Arm { ref pats, guard: None, .. } = *arm {

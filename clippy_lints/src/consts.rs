@@ -5,8 +5,9 @@ use rustc::hir::def::Def;
 use rustc_const_eval::lookup_const_by_id;
 use rustc_const_math::ConstInt;
 use rustc::hir::*;
-use rustc::ty::{self, TyCtxt, Ty};
+use rustc::ty::{self, TyCtxt, Ty, ParamEnv};
 use rustc::ty::subst::{Substs, Subst};
+use rustc::traits::Reveal;
 use std::cmp::Ordering::{self, Equal};
 use std::cmp::PartialOrd;
 use std::hash::{Hash, Hasher};
@@ -292,7 +293,8 @@ impl<'c, 'cc> ConstEvalLateContext<'c, 'cc> {
                 } else {
                     substs.subst(self.tcx, self.substs)
                 };
-                if let Some((def_id, substs)) = lookup_const_by_id(self.tcx, def_id, substs) {
+                let param_env = ParamEnv::empty(Reveal::UserFacing);
+                if let Some((def_id, substs)) = lookup_const_by_id(self.tcx, param_env.and((def_id, substs))) {
                     let mut cx = ConstEvalLateContext {
                         tcx: self.tcx,
                         tables: self.tcx.typeck_tables_of(def_id),

@@ -2,6 +2,7 @@ use regex_syntax;
 use rustc::hir::*;
 use rustc::lint::*;
 use rustc::middle::const_val::ConstVal;
+use rustc::ty::subst::Substs;
 use rustc_const_eval::ConstContext;
 use std::collections::HashSet;
 use std::error::Error;
@@ -150,7 +151,7 @@ fn str_span(base: Span, s: &str, c: usize) -> Span {
 }
 
 fn const_str(cx: &LateContext, e: &Expr) -> Option<InternedString> {
-    match ConstContext::with_tables(cx.tcx, cx.tables).eval(e) {
+    match ConstContext::new(cx.tcx, cx.param_env.and(Substs::empty()), cx.tables).eval(e) {
         Ok(ConstVal::Str(r)) => Some(r),
         _ => None,
     }

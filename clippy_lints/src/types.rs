@@ -4,6 +4,7 @@ use rustc::hir::*;
 use rustc::hir::intravisit::{FnKind, Visitor, walk_ty, NestedVisitorMap};
 use rustc::lint::*;
 use rustc::ty::{self, Ty};
+use rustc::ty::subst::Substs;
 use std::cmp::Ordering;
 use syntax::ast::{IntTy, UintTy, FloatTy};
 use syntax::attr::IntType;
@@ -977,7 +978,7 @@ fn detect_extreme_expr<'a>(cx: &LateContext, expr: &'a Expr) -> Option<ExtremeEx
         _ => return None,
     };
 
-    let cv = match ConstContext::with_tables(cx.tcx, cx.tables).eval(expr) {
+    let cv = match ConstContext::new(cx.tcx, cx.param_env.and(Substs::empty()), cx.tables).eval(expr) {
         Ok(val) => val,
         Err(_) => return None,
     };
@@ -1174,7 +1175,7 @@ fn node_as_const_fullint(cx: &LateContext, expr: &Expr) -> Option<FullInt> {
     use rustc::middle::const_val::ConstVal::*;
     use rustc_const_eval::ConstContext;
 
-    match ConstContext::with_tables(cx.tcx, cx.tables).eval(expr) {
+    match ConstContext::new(cx.tcx, cx.param_env.and(Substs::empty()), cx.tables).eval(expr) {
         Ok(val) => {
             if let Integral(const_int) = val {
                 match const_int.int_type() {
